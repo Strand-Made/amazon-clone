@@ -15,7 +15,7 @@ const Product = ({ id, title, price, description, category, image }) => {
 
   return (
     <div className="relative flex flex-col m-5 bg-white z-30 p-10">
-      <p class="absolute t-2 right-2 text-xs italic text-gray-400">
+      <p className="absolute t-2 right-2 text-xs italic text-gray-400">
         {category}
       </p>
       <Image
@@ -31,7 +31,7 @@ const Product = ({ id, title, price, description, category, image }) => {
         {Array(rating)
           .fill()
           .map((_, i) => (
-            <StarIcon className="h-5 text-yellow-500" />
+            <StarIcon key={i} className="h-5 text-yellow-500" />
           ))}
       </div>
       <p className="text-xs my-2 line-clamp-2">{description}</p>
