@@ -1,19 +1,40 @@
 import Image from "next/image";
 import { useSelector } from "react-redux";
+import axios from "axios";
 import Header from "../components/Header";
 import { selectItems, selectTotal } from "../slices/basketSlice";
 import CheckoutProduct from "../components/CheckoutProduct";
 import { currencyFormatter } from "../helpers/currencyHelper";
 import { useSession } from "next-auth/client";
+import { loadStripe } from "@stripe/stripe-js";
+
+const stripePromise = loadStripe(process.env.stripe_public_key);
 
 const Checkout = () => {
   const items = useSelector(selectItems);
   const total = useSelector(selectTotal);
   const [session] = useSession();
+
+  const createCheckoutSession = async () => {
+    const stripe = await stripePromise;
+
+    const checkoutSession = await axios.post("/api/create-checkout-session", {
+      items,
+      email: session.user.email,
+    });
+    const result = await stripe.redirectToCheckout({
+      sessionId: checkoutSession.data.id,
+    });
+
+    if (result.error) {
+      console.log(result.error.message);
+    }
+  };
+
   return (
     <div className="bg-gray-100">
       <Header />
-      <main class="lg:flex max-w-screen-2xl mx-auto">
+      <main className="lg:flex max-w-screen-2xl mx-auto">
         {/* left  */}
         <div className="flex-grow m-5 shadow-sm">
           <Image
@@ -38,16 +59,18 @@ const Checkout = () => {
               <h2 className="whitespace-nowrap">
                 Subtotal ({items.length} items):{" "}
                 <span className="font-bold"> {currencyFormatter(total)}</span>
-                <button
-                  className={`button mt-2 ${
-                    !session
-                      ? "from-gray-300 to-gray-500 border-gray-200 text-gray-300"
-                      : null
-                  }`}
-                >
-                  {!session ? "Sign in" : "Proceed to checkout"}
-                </button>
               </h2>
+              <button
+                role="link"
+                onclick={createCheckoutSession}
+                className={`button mt-2 ${
+                  !session
+                    ? "from-gray-300 to-gray-500 border-gray-200 text-gray-300"
+                    : null
+                }`}
+              >
+                {!session ? "Sign in" : "Proceed to checkout"}
+              </button>
             </>
           ) : null}
         </div>
